@@ -1,5 +1,5 @@
 'use client'
-import { useScreenType } from "@/hooks/utils";
+import { useScreenType } from "@/app/hooks/utils";
 import { useMemo } from "react";
 
 interface PopupProps {

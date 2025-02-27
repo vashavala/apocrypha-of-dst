@@ -1,9 +1,9 @@
 'use client'
-import Image from 'next/image';
-import { useState } from "react";
-import { Popup } from "@/app/components";
-import { useTranslation } from "@/hooks/utils";
+import { useMemo, useState } from "react";
+import { Popup, RadioGroup, CheckboxGroup } from "@/app/components";
+import { useTranslation } from "@/app/hooks/utils";
 import { IconSettings } from '@/app/svgs';
+import { getStorage, setStorage } from "@/app/hooks/storage";
 
 const LangSwitcher = () => {
   const t = useTranslation();
@@ -33,25 +33,62 @@ const LangSwitcher = () => {
   )
 }
 
-const GameSwitcher = () => {
-  const versions = [
-    { value: 'dst', src: '/images/version-dst.png' },
-    { value: 'ham', src: '/images/version-ham.png' },
-    { value: 'sw', src: '/images/version-sw.png' },
-    { value: 'rog', src: '/images/version-rog.png' },
+const GameVersionSwitcher = () => {
+  const t = useTranslation();
+  const gameVersions = [
+    { label: t('game_version_ds'), value: 'ds' },
+    { label: t('game_version_dst'), value: 'dst' },
   ]
-  const [version] = useState(localStorage.getItem('vasha-game-version') || 'dst')
-  const siwtchGameVersion = (versionVal: string) => {
-    localStorage.setItem('vasha-game-version', versionVal)
-    location.reload()
+  const dsDLCs = [
+    { label: t('ds_dlc_rog'), value: 'rog' },
+    { label: t('ds_dlc_sw'), value: 'sw' },
+    { label: t('ds_dlc_ham'), value: 'ham' },
+  ]
+  const allDsDLC = dsDLCs.map(_ => _.value)
+  const [selectedGameVersion, setSelectedGameVersion] = useState(getStorage('selected-game-version') || 'ds')
+  const [pickedDsDLC, setPickedDsDLC] = useState(getStorage('picked-ds-dlcs') || [])
+  const dsDLCAlignStorage = (dsDLCArray: string[]) => {
+    setPickedDsDLC(dsDLCArray)
+    setStorage('picked-ds-dlcs', dsDLCArray)
   }
+  const handleChangeVersion = (version: string) => {
+    if (version === 'ds') {
+      dsDLCAlignStorage(allDsDLC)
+    } else if (version === 'dst') {
+      dsDLCAlignStorage([])
+    }
+    setSelectedGameVersion(version)
+    setStorage('selected-game-version', version)
+  }
+  const handleToggleDsDLC = (dlc: string) => {
+    if (pickedDsDLC.includes(dlc)) {
+      dsDLCAlignStorage(
+        pickedDsDLC.filter((_dlc: string) => _dlc !== dlc)
+      )
+    } else {
+      dsDLCAlignStorage(
+        [...pickedDsDLC, dlc]
+      )
+    }
+  }
+  const banDsDLC = useMemo(() => selectedGameVersion === 'dst', [selectedGameVersion])
   return (
     <div className='flex items-center justify-center gap-[1rem]'>
-      {versions.map(v =>
-        <div key={v.value} className='w-[4rem] h-[4rem] relative cursor-pointer' onClick={() => siwtchGameVersion(v.value)}>
-          <Image src={v.src} alt={v.value} fill className={version === v.value ? `` : `blur-[2px] grayscale`} />
-        </div>
-      )}
+      <RadioGroup
+        options={gameVersions}
+        selectOneInGroup={handleChangeVersion}
+        selected={selectedGameVersion}
+        radioSetName="game-version"
+        className={`flex flex-col gap-[1rem]`}
+      />
+      <CheckboxGroup
+        options={dsDLCs}
+        toggleOneInGroup={handleToggleDsDLC}
+        selectedGroup={pickedDsDLC}
+        checkboxSetName="ds-version"
+        groupDisabled={banDsDLC}
+        classNames={`flex flex-col gap-[1rem] whitespace-nowrap`}
+      />
     </div>
   )
 }
@@ -66,7 +103,7 @@ export default function Recipes() {
       </div>
       <Popup onClose={() => setVisible(false)} show={visible} title={t('settings')} sectionClassNames="flex flex-col items-center *:mt-[2rem]">
         <LangSwitcher />
-        <GameSwitcher />
+        <GameVersionSwitcher />
       </Popup>
     </>
   );

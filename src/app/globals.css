@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+
+@font-face {
+  font-family: 'bds';
+  src: url('/fonts/bigdonstarve.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bgc: #000;
   --tc: #fff;
@@ -10,6 +19,8 @@
   color: var(--tc);
 
   --y1: #c89c70;
+
+  font-family: 'bds', sans-serif;
 }
 
 html,
